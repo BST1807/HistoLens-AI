@@ -9,6 +9,10 @@ let heatmapItem = null;
 let activeTool = 'pan'; // 'pan' | 'roi'
 let roiMarkerOverlay = null;
 
+let currentScope = 'roi'; // 'roi' | 'slide'
+let slideMetrics = null;
+let lastRoiData = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     initUI();
@@ -22,6 +26,15 @@ function initUI() {
 
     btnPan.addEventListener('click', () => setTool('pan'));
     btnRoi.addEventListener('click', () => setTool('roi'));
+
+    // Scope toggle buttons (Selected ROI vs Whole Slide)
+    const btnScopeRoi = document.getElementById('scope-roi');
+    const btnScopeSlide = document.getElementById('scope-slide');
+
+    if (btnScopeRoi && btnScopeSlide) {
+        btnScopeRoi.addEventListener('click', () => setScope('roi'));
+        btnScopeSlide.addEventListener('click', () => setScope('slide'));
+    }
 
     // Heatmap controls
     const toggleHeatmapBtn = document.getElementById('toggle-heatmap');
@@ -222,20 +235,19 @@ function initOpenSeadragon(slideId, metadata) {
         document.getElementById('mag-text').textContent = magText;
     });
 
-    // Dedicated MouseTracker for reliable ROI inspection clicks
-    new OpenSeadragon.MouseTracker({
-        element: viewer.canvas,
-        clickHandler: function(event) {
-            if (activeTool !== 'roi') return;
-            const viewportPoint = viewer.viewport.pointFromPixel(event.position);
-            const imagePoint = viewer.viewport.viewportToImageCoordinates(viewportPoint);
-            const imgX = Math.round(imagePoint.x);
-            const imgY = Math.round(imagePoint.y);
+    // Official OpenSeadragon canvas-click handler (fires on clicks, ignores drag/pan)
+    viewer.addHandler('canvas-click', function(event) {
+        if (!event.quick) return; // Only process clean clicks, not pan drags
+        event.preventGesture = true;
 
-            if (imgX >= 0 && imgX <= metadata.Size.Width && imgY >= 0 && imgY <= metadata.Size.Height) {
-                triggerRoiInspection(imgX, imgY);
-                addRoiMarkerOnCanvas(imagePoint);
-            }
+        const viewportPoint = viewer.viewport.pointFromPixel(event.position);
+        const imagePoint = viewer.viewport.viewportToImageCoordinates(viewportPoint);
+        const imgX = Math.round(imagePoint.x);
+        const imgY = Math.round(imagePoint.y);
+
+        if (imgX >= 0 && imgX <= metadata.Size.Width && imgY >= 0 && imgY <= metadata.Size.Height) {
+            triggerRoiInspection(imgX, imgY);
+            addRoiMarkerOnCanvas(imagePoint);
         }
     });
 }
@@ -280,6 +292,90 @@ function addRoiMarkerOnCanvas(imagePoint) {
     roiMarkerOverlay = marker;
 }
 
+function setScope(scope) {
+    currentScope = scope;
+    const btnRoi = document.getElementById('scope-roi');
+    const btnSlide = document.getElementById('scope-slide');
+    if (btnRoi && btnSlide) {
+        btnRoi.classList.toggle('active', scope === 'roi');
+        btnSlide.classList.toggle('active', scope === 'slide');
+    }
+    renderDashboard();
+}
+
+function renderDashboard() {
+    if (currentScope === 'roi' && lastRoiData) {
+        document.getElementById('card-tag-label').textContent = 'Selected Patch Assessment';
+        document.getElementById('hero-metric-desc').textContent = 'Local Malignancy Risk';
+
+        const probPct = (lastRoiData.tumor_probability * 100).toFixed(1);
+        document.getElementById('metric-tumor-burden').textContent = probPct;
+        document.getElementById('tumor-burden-progress').style.width = `${Math.min(100, probPct)}%`;
+
+        const riskBadge = document.getElementById('risk-badge');
+        riskBadge.textContent = lastRoiData.classification;
+        riskBadge.removeAttribute('style');
+        if (lastRoiData.tumor_probability > 0.6) {
+            riskBadge.className = 'risk-badge risk-high';
+        } else if (lastRoiData.tumor_probability > 0.35) {
+            riskBadge.className = 'risk-badge risk-moderate';
+        } else {
+            riskBadge.className = 'risk-badge';
+            riskBadge.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            riskBadge.style.color = '#10B981';
+            riskBadge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        }
+
+        document.getElementById('box-1-label').textContent = 'Patch Area';
+        document.getElementById('metric-tissue-area').textContent = '0.016 mm²';
+        document.getElementById('box-1-sub').textContent = 'Local 40x Window';
+
+        document.getElementById('box-2-label').textContent = 'Nuclei Count';
+        document.getElementById('metric-tumor-area').textContent = `${lastRoiData.nuclei_count} cells`;
+        document.getElementById('box-2-sub').textContent = 'Single-cell Centroids';
+
+        document.getElementById('box-3-label').textContent = 'Stroma Ratio';
+        document.getElementById('metric-tsr').textContent = `${(lastRoiData.stroma_ratio * 100).toFixed(1)}%`;
+        document.getElementById('box-3-sub').textContent = 'Eosin Stain Share';
+
+        document.getElementById('box-4-label').textContent = 'Nuclear Density';
+        document.getElementById('metric-nuclear-density').textContent = `${lastRoiData.nuclei_density_per_mm2} /mm²`;
+        document.getElementById('box-4-sub').textContent = 'Local Proliferation';
+
+    } else if (slideMetrics) {
+        document.getElementById('card-tag-label').textContent = 'WHO Disease Stratification';
+        document.getElementById('hero-metric-desc').textContent = 'Slide Tumor Burden';
+
+        document.getElementById('metric-tumor-burden').textContent = slideMetrics.tumor_burden_pct;
+        document.getElementById('tumor-burden-progress').style.width = `${Math.min(100, slideMetrics.tumor_burden_pct)}%`;
+
+        const riskBadge = document.getElementById('risk-badge');
+        riskBadge.textContent = slideMetrics.risk_level;
+        riskBadge.removeAttribute('style');
+        if (slideMetrics.tumor_burden_pct > 35) {
+            riskBadge.className = 'risk-badge risk-high';
+        } else {
+            riskBadge.className = 'risk-badge risk-moderate';
+        }
+
+        document.getElementById('box-1-label').textContent = 'Tissue Area';
+        document.getElementById('metric-tissue-area').textContent = `${slideMetrics.tissue_area_mm2} mm²`;
+        document.getElementById('box-1-sub').textContent = 'Viable Specimen';
+
+        document.getElementById('box-2-label').textContent = 'Tumor Area';
+        document.getElementById('metric-tumor-area').textContent = `${slideMetrics.tumor_area_mm2} mm²`;
+        document.getElementById('box-2-sub').textContent = 'Infiltrating Mass';
+
+        document.getElementById('box-3-label').textContent = 'TSR Ratio';
+        document.getElementById('metric-tsr').textContent = `${slideMetrics.tumor_to_stroma_ratio}`;
+        document.getElementById('box-3-sub').textContent = 'Tumor-to-Stroma';
+
+        document.getElementById('box-4-label').textContent = 'Nuclear Density';
+        document.getElementById('metric-nuclear-density').textContent = `${slideMetrics.estimated_nuclei_density} /mm²`;
+        document.getElementById('box-4-sub').textContent = 'Cell Proliferation';
+    }
+}
+
 async function triggerRoiInspection(x, y) {
     const placeholder = document.getElementById('roi-placeholder');
     const patchImg = document.getElementById('roi-patch-image');
@@ -295,6 +391,8 @@ async function triggerRoiInspection(x, y) {
             body: JSON.stringify({ x: x, y: y, size: 256 })
         });
         const data = await resp.json();
+
+        lastRoiData = data;
 
         // Update ROI card
         placeholder.style.display = 'none';
@@ -316,6 +414,10 @@ async function triggerRoiInspection(x, y) {
         document.getElementById('roi-stroma-ratio').textContent = `${(data.stroma_ratio * 100).toFixed(1)}%`;
 
         badge.textContent = `(${x}, ${y})`;
+
+        // Automatically update the top dashboard metrics to reflect the clicked area
+        setScope('roi');
+
     } catch (err) {
         console.error('ROI analysis error:', err);
         badge.textContent = 'Error';
@@ -326,23 +428,10 @@ async function fetchMetrics(slideId) {
     try {
         const resp = await fetch(`/api/slide/${slideId}/metrics`);
         const metrics = await resp.json();
+        slideMetrics = metrics;
 
-        // Update summary cards
-        document.getElementById('metric-tumor-burden').textContent = metrics.tumor_burden_pct;
-        document.getElementById('tumor-burden-progress').style.width = `${Math.min(100, metrics.tumor_burden_pct)}%`;
-
-        const riskBadge = document.getElementById('risk-badge');
-        riskBadge.textContent = metrics.risk_level;
-        if (metrics.tumor_burden_pct > 35) {
-            riskBadge.className = 'risk-badge risk-high';
-        } else {
-            riskBadge.className = 'risk-badge risk-moderate';
-        }
-
-        document.getElementById('metric-tissue-area').textContent = `${metrics.tissue_area_mm2} mm²`;
-        document.getElementById('metric-tumor-area').textContent = `${metrics.tumor_area_mm2} mm²`;
-        document.getElementById('metric-tsr').textContent = `${metrics.tumor_to_stroma_ratio}`;
-        document.getElementById('metric-nuclear-density').textContent = `${metrics.estimated_nuclei_density} /mm²`;
+        // Render dashboard with active scope
+        renderDashboard();
 
     } catch (err) {
         console.error('Failed to fetch slide metrics:', err);

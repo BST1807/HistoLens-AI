@@ -130,18 +130,30 @@
             </div>
 
             <div class="sidebar-scrollable">
-                <!-- Primary Clinical Summary Card -->
+                <!-- Scope Switcher: Selected ROI vs Whole Slide -->
+                <div class="scope-toggle-container">
+                    <button id="scope-roi" class="scope-btn active" title="View metrics for the selected tissue patch">
+                        <i data-lucide="crosshair"></i>
+                        <span>Selected ROI</span>
+                    </button>
+                    <button id="scope-slide" class="scope-btn" title="View aggregated metrics for the entire biopsy slide">
+                        <i data-lucide="globe"></i>
+                        <span>Whole Slide</span>
+                    </button>
+                </div>
+
+                <!-- Primary Clinical Summary Card (Dynamically updates with Selected ROI or Whole Slide) -->
                 <div class="card summary-card">
                     <div class="card-title-row">
-                        <span class="card-tag">WHO Disease Stratification</span>
-                        <span id="risk-badge" class="risk-badge risk-moderate">Calculating...</span>
+                        <span id="card-tag-label" class="card-tag">Selected Patch Assessment</span>
+                        <span id="risk-badge" class="risk-badge risk-moderate">Analyzing...</span>
                     </div>
                     <div class="metric-hero">
                         <div class="hero-val-group">
                             <span id="metric-tumor-burden" class="hero-val">--</span>
                             <span class="hero-unit">%</span>
                         </div>
-                        <span class="hero-desc">Tumor Burden Ratio</span>
+                        <span id="hero-metric-desc" class="hero-desc">Local Malignancy Risk</span>
                     </div>
                     <div class="progress-bar-container">
                         <div id="tumor-burden-progress" class="progress-bar-fill" style="width: 0%;"></div>
@@ -151,24 +163,24 @@
                 <!-- Secondary Quantitative Biomarkers Grid -->
                 <div class="biomarker-grid">
                     <div class="biomarker-box">
-                        <span class="box-label">Tissue Area</span>
-                        <span id="metric-tissue-area" class="box-value">-- mm²</span>
-                        <span class="box-sub">Viable Specimen</span>
+                        <span id="box-1-label" class="box-label">Patch Area</span>
+                        <span id="metric-tissue-area" class="box-value">--</span>
+                        <span id="box-1-sub" class="box-sub">Local 40x Window</span>
                     </div>
                     <div class="biomarker-box">
-                        <span class="box-label">Tumor Area</span>
-                        <span id="metric-tumor-area" class="box-value">-- mm²</span>
-                        <span class="box-sub">Infiltrating Mass</span>
+                        <span id="box-2-label" class="box-label">Nuclei Count</span>
+                        <span id="metric-tumor-area" class="box-value">--</span>
+                        <span id="box-2-sub" class="box-sub">Single-cell Centroids</span>
                     </div>
                     <div class="biomarker-box">
-                        <span class="box-label">TSR Ratio</span>
+                        <span id="box-3-label" class="box-label">Stroma Ratio</span>
                         <span id="metric-tsr" class="box-value">--</span>
-                        <span id="metric-tsr-label" class="box-sub">Tumor-to-Stroma</span>
+                        <span id="box-3-sub" class="box-sub">Eosin Stain Share</span>
                     </div>
                     <div class="biomarker-box">
-                        <span class="box-label">Nuclear Density</span>
+                        <span id="box-4-label" class="box-label">Nuclear Density</span>
                         <span id="metric-nuclear-density" class="box-value">-- /mm²</span>
-                        <span class="box-sub">Cell Proliferation</span>
+                        <span id="box-4-sub" class="box-sub">Local Proliferation</span>
                     </div>
                 </div>
 

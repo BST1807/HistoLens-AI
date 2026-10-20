@@ -526,6 +526,50 @@ body {
     border-radius: 4px;
 }
 
+/* Scope Switcher */
+.scope-toggle-container {
+    display: flex;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+.scope-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.scope-btn:hover {
+    color: var(--text-primary);
+}
+
+.scope-btn.active {
+    background: rgba(14, 165, 233, 0.2);
+    color: var(--cyan-400);
+    border-color: rgba(14, 165, 233, 0.35);
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+}
+
+.scope-btn svg {
+    width: 13px;
+    height: 13px;
+}
+
 /* Cards */
 .card {
     background: var(--bg-surface-elevated);
