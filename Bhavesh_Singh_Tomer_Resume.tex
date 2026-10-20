@@ -1,0 +1,89 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\geometry{left=15mm, right=15mm, top=12mm, bottom=12mm}
+
+\titleformat{\section}{\large\bfseries\scshape\raggedright}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{6pt}{4pt}
+
+\setlist[itemize]{noitemsep, topsep=1pt, parsep=1pt, leftmargin=15pt}
+
+\begin{document}
+
+% ------------------- HEADER -------------------
+\begin{center}
+    {\LARGE \textbf{Bhavesh Singh Tomer}} \\ \vspace{2pt}
+    \small Adm. No.: 23JE0231 \ \textbar\ \ Phone: +91 7078028307 \ \textbar\ \ Email: \href{mailto:bhaveshsingh1807@gmail.com}{bhaveshsingh1807@gmail.com} \\
+    LinkedIn: \href{https://linkedin.com/in/BhaveshTomer}{linkedin.com/in/BhaveshTomer} \ \textbar\ \ GitHub: \href{https://github.com/BST1807}{github.com/BST1807}
+\end{center}
+\vspace{-6pt}
+
+% ------------------- EDUCATION -------------------
+\section{Education}
+\textbf{IIT (ISM) Dhanbad} \hfill \textit{Expected May 2027} \\
+\textit{B.Tech in Mining Machinery Engineering (Department of Mechanical Engineering), CGPA: 8.00} \hfill Dhanbad, Jharkhand \\
+\vspace{1pt}
+$\bullet$ \textbf{Relevant Coursework:} Data Structures and Algorithms (C++), Digital Image Processing, Computer Programming, Computer Programming Lab
+
+% ------------------- EXPERIENCE -------------------
+\section{Experience}
+\textbf{1Stop} \hfill \textit{Apr 2024 -- Jun 2024} \\
+\textit{Web Development Front-End}
+\begin{itemize}
+    \item Developed responsive websites using HTML, CSS, JavaScript, Bootstrap, and jQuery, with mobile-friendly layouts and reusable UI components.
+    \item Implemented interactive features such as navigation menus, form validation, dynamic content updates, sliders, carousels, and smooth scrolling to improve user experience.
+\end{itemize}
+
+% ------------------- PROJECTS -------------------
+\section{Projects}
+
+\textbf{HistoLens AI: High-Resolution Digital Pathology \& WSI Analysis} \textbar\ \textit{Python, FastAPI, OpenSeadragon, OpenCV, Scikit-Image, DeepZoom} \hfill \href{https://github.com/BST1807}{[GitHub]}
+\begin{itemize}
+    \item Architected an on-demand DeepZoom tile streaming pipeline (256$\times$256 tiles) to process gigapixel Whole Slide Images ($\sim$50K$\times$50K), decoupling multi-gigabyte files from RAM to sustain $<$150 MB runtime memory.
+    \item Engineered an automated tissue segmentation module using Otsu and HSV chroma thresholding to filter 80\% blank glass background, coupled with Beer-Lambert optical density deconvolution for Hematoxylin \& Eosin stain separation.
+    \item Implemented a high-magnification (40$\times$) ROI patch analyzer with single-cell nuclei segmentation, quantifying nuclear crowding ($>$2500 cells/mm$^2$), pleomorphism, and malignancy probability in real time.
+    \item Developed a full-stack digital pathology viewer with OpenSeadragon (1$\times$--40$\times$ multi-scale zoom), real-time tumor probability heatmap overlays, WHO disease stratification, TSR calculation, and automated signed PDF report generation.
+\end{itemize}
+
+\vspace{3pt}
+\textbf{AgenticAI RAG for SWE-QA} \textbar\ \textit{LangGraph, LangChain, Qdrant, Hugging Face, FastAPI, Docker, RAGAS} \hfill \href{https://github.com/BST1807}{[GitHub]}
+\begin{itemize}
+    \item Developed an Agentic Retrieval-Augmented Generation (RAG) system for software engineering question answering over technical documentation and open-source code repositories using LangGraph, Qdrant, and Mistral 7B.
+    \item Implemented Adaptive-RAG with intelligent query routing and Corrective-RAG featuring retrieval evaluation, query refinement, and iterative re-retrieval, improving Answer Relevancy by 17.8\% over a baseline RAG pipeline.
+    \item Assembled a hybrid retrieval pipeline combining BM25 and dense vector search (Sentence Transformers + Qdrant) with BGE reranking and AST-aware code chunking across multiple repositories.
+    \item Containerized the application using Docker, exposed FastAPI REST APIs, and evaluated using RAGAS, achieving 91.8\% Faithfulness, 89.6\% Context Precision, 93.1\% Answer Relevancy, and an average response latency of 840 ms.
+\end{itemize}
+
+\vspace{3pt}
+\textbf{Bitcoin x402 Payment System} \textbar\ \textit{Starknet, Next.js, TypeScript, Express.js, Web3} \hfill \href{https://github.com/BST1807}{[GitHub]}
+\begin{itemize}
+    \item Developed an HTTP 402-based payment system enabling Bitcoin-denominated micropayments for API access and pay-per-use services on Starknet.
+    \item Built backend workflows for HTTP 402 payment handling, transaction verification, payment validation, and secure request processing.
+    \item Developed a Next.js payment interface with QR-based wallet integration, real-time transaction tracking, and payment diagnostics.
+    \item Integrated blockchain payment workflows with nonce-based transaction validation and explored privacy-preserving ZK proof mechanisms for payment verification.
+\end{itemize}
+
+% ------------------- TECHNICAL SKILLS -------------------
+\section{Technical Skills}
+\textbf{Languages:} Python, C++, JavaScript, TypeScript, Solidity, SQL \\
+\textbf{Technologies/Frameworks:} FastAPI, OpenCV, PyTorch, Scikit-Image, OpenSeadragon, React.js, Express.js, Node.js, Docker, MongoDB \\
+\textbf{Concepts:} Digital Image Processing, Computer Vision, DeepZoom/WSI Tiling, Agentic RAG, Blockchain, REST APIs
+
+% ------------------- ACHIEVEMENTS -------------------
+\section{Achievements}
+\begin{itemize}
+    \item Team member of a winning project in ETHGlobal’s Agentic Ethereum - OPSEC track.
+\end{itemize}
+
+% ------------------- SOCIAL ENGAGEMENTS -------------------
+\section{Social Engagements}
+\textbf{Club Member:} Cyber Labs - Tech Society of IIT Dhanbad \hfill \textbf{Lawn Tennis:} College Team \\
+\textbf{Volunteer:} Srijan (Cultural Fest) Documentation Team \hfill \textbf{Captain:} House Captain at DPS Bareilly
+
+\end{document}

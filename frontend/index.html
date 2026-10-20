@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HistoLens AI | Enterprise Digital Pathology & Gigapixel WSI Platform</title>
+    <meta name="description" content="Advanced multi-resolution digital pathology viewing and AI quantification engine for gigapixel whole slide images.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- OpenSeadragon CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.1/openseadragon.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand-logo">
+                <div class="logo-icon-wrapper">
+                    <i data-lucide="microscope" class="logo-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">HistoLens<span class="brand-accent">AI</span></span>
+                    <span class="brand-subtitle">Digital Pathology WSI Platform</span>
+                </div>
+            </div>
+
+            <div class="slide-selector-wrapper">
+                <i data-lucide="layers" class="selector-icon"></i>
+                <select id="slide-select" class="slide-dropdown" title="Select Specimen Slide">
+                    <option value="" disabled selected>Loading specimens...</option>
+                </select>
+                <span id="slide-meta-badge" class="meta-badge">-- × -- px</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <label class="btn-action btn-upload" title="Upload SVS / TIFF Slide">
+                <i data-lucide="upload-cloud"></i>
+                <span>Upload Slide</span>
+                <input type="file" id="upload-input" accept=".svs,.tiff,.tif,.jpg,.jpeg,.png" style="display:none;">
+            </label>
+
+            <button id="btn-export-pdf" class="btn-action btn-export" title="Download Clinical Pathology PDF Report">
+                <i data-lucide="file-text"></i>
+                <span>Export PDF Report</span>
+            </button>
+
+            <button id="btn-fullscreen" class="btn-icon" title="Toggle Fullscreen">
+                <i data-lucide="maximize"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-container">
+        <!-- Center Viewport: OpenSeadragon DeepZoom Canvas -->
+        <section class="viewer-section">
+            <div id="openseadragon-viewer" class="osd-canvas"></div>
+
+            <!-- Floating Overlay Control Bar (Top Left of Viewer) -->
+            <div class="floating-controls">
+                <div class="control-group">
+                    <button id="tool-pan" class="tool-btn active" title="Pan and Zoom Mode">
+                        <i data-lucide="hand"></i>
+                        <span>Navigate</span>
+                    </button>
+                    <button id="tool-roi" class="tool-btn" title="Click anywhere on tissue to analyze ROI patch">
+                        <i data-lucide="scan"></i>
+                        <span>Inspect ROI</span>
+                    </button>
+                </div>
+
+                <div class="control-divider"></div>
+
+                <!-- Heatmap Controls -->
+                <div class="heatmap-controller">
+                    <button id="toggle-heatmap" class="heatmap-toggle-btn active">
+                        <i data-lucide="flame"></i>
+                        <span>AI Heatmap</span>
+                    </button>
+                    <div class="slider-wrapper" id="opacity-slider-container">
+                        <span class="slider-label">Opacity</span>
+                        <input type="range" id="heatmap-opacity" min="0" max="100" value="65" class="opacity-slider">
+                        <span id="opacity-val" class="slider-val">65%</span>
+                    </div>
+                </div>
+
+                <div class="control-divider"></div>
+
+                <!-- Live Magnification Badge -->
+                <div class="mag-badge" id="mag-indicator">
+                    <i data-lucide="zoom-in" class="mag-icon"></i>
+                    <span id="mag-text">1.0x</span>
+                </div>
+            </div>
+
+            <!-- Floating Heatmap Legend (Bottom Left) -->
+            <div class="floating-legend" id="heatmap-legend">
+                <div class="legend-header">
+                    <span>Tumor Probability</span>
+                </div>
+                <div class="legend-bar"></div>
+                <div class="legend-labels">
+                    <span>Benign (0%)</span>
+                    <span>Atypical (50%)</span>
+                    <span>Malignant (100%)</span>
+                </div>
+            </div>
+
+            <!-- Loading Spinner / Status Overlay -->
+            <div id="viewer-loader" class="viewer-loader">
+                <div class="spinner"></div>
+                <p id="loader-status">Initializing Pyramidal WSI Stream...</p>
+            </div>
+        </section>
+
+        <!-- Right Side: Pathology Intelligence & Diagnostics Drawer -->
+        <aside class="sidebar-panel">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <i data-lucide="activity"></i>
+                    <h3>Diagnostic Quantification</h3>
+                </div>
+                <span class="status-indicator live">Real-time</span>
+            </div>
+
+            <div class="sidebar-scrollable">
+                <!-- Primary Clinical Summary Card -->
+                <div class="card summary-card">
+                    <div class="card-title-row">
+                        <span class="card-tag">WHO Disease Stratification</span>
+                        <span id="risk-badge" class="risk-badge risk-moderate">Calculating...</span>
+                    </div>
+                    <div class="metric-hero">
+                        <div class="hero-val-group">
+                            <span id="metric-tumor-burden" class="hero-val">--</span>
+                            <span class="hero-unit">%</span>
+                        </div>
+                        <span class="hero-desc">Tumor Burden Ratio</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="tumor-burden-progress" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Secondary Quantitative Biomarkers Grid -->
+                <div class="biomarker-grid">
+                    <div class="biomarker-box">
+                        <span class="box-label">Tissue Area</span>
+                        <span id="metric-tissue-area" class="box-value">-- mm²</span>
+                        <span class="box-sub">Viable Specimen</span>
+                    </div>
+                    <div class="biomarker-box">
+                        <span class="box-label">Tumor Area</span>
+                        <span id="metric-tumor-area" class="box-value">-- mm²</span>
+                        <span class="box-sub">Infiltrating Mass</span>
+                    </div>
+                    <div class="biomarker-box">
+                        <span class="box-label">TSR Ratio</span>
+                        <span id="metric-tsr" class="box-value">--</span>
+                        <span id="metric-tsr-label" class="box-sub">Tumor-to-Stroma</span>
+                    </div>
+                    <div class="biomarker-box">
+                        <span class="box-label">Nuclear Density</span>
+                        <span id="metric-nuclear-density" class="box-value">-- /mm²</span>
+                        <span class="box-sub">Cell Proliferation</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Region of Interest (ROI) Card -->
+                <div class="card roi-card">
+                    <div class="card-header-clean">
+                        <div class="roi-title-wrap">
+                            <i data-lucide="crosshair"></i>
+                            <h4>Interactive ROI Patch Inspector</h4>
+                        </div>
+                        <span class="patch-badge" id="roi-status-badge">40x Full-Res</span>
+                    </div>
+
+                    <div class="roi-preview-container">
+                        <div id="roi-placeholder" class="roi-placeholder">
+                            <i data-lucide="scan-line"></i>
+                            <p>Click anywhere on the tissue slide with <b>Inspect ROI</b> to analyze local cellular microarchitecture.</p>
+                        </div>
+                        <img id="roi-patch-image" class="roi-patch-img" alt="ROI Patch Preview" style="display:none;">
+                    </div>
+
+                    <div id="roi-results-panel" class="roi-details" style="display:none;">
+                        <div class="detail-row">
+                            <span class="detail-key">Diagnosis:</span>
+                            <span id="roi-diagnosis" class="detail-val highlight">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Malignancy Prob:</span>
+                            <span id="roi-prob" class="detail-val">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Nuclei Detected:</span>
+                            <span id="roi-nuclei-count" class="detail-val">-- cells</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Stroma Ratio:</span>
+                            <span id="roi-stroma-ratio" class="detail-val">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Architecture Callout for Interviews -->
+                <div class="card info-card">
+                    <div class="info-header">
+                        <i data-lucide="cpu"></i>
+                        <h5>AIRA Matrix Core Tech Alignment</h5>
+                    </div>
+                    <ul class="tech-list">
+                        <li><b>Pyramidal Tiling:</b> Multi-scale DeepZoom streams 256×256 tiles on demand (scales to 50k×50k).</li>
+                        <li><b>Tissue Isolation:</b> Otsu + HSV chroma thresholding filters 80% blank glass background.</li>
+                        <li><b>Optical Deconvolution:</b> Beer-Lambert matrix separation of Hematoxylin & Eosin stains.</li>
+                        <li><b>Single-Cell Morphometry:</b> Nuclear crowding & pleomorphism segmentation.</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
